@@ -17,7 +17,23 @@ defmodule PriceSpider.BasicSpider do
   end
 
   @impl Crawly.Spider
-  def parse_item(_response) do
-    %Crawly.ParsedItem{:items => [], :requests => []}
+  def parse_item(response) do
+    {:ok, document} =
+      response.body
+      |> Floki.parse_document()
+
+    price =
+      document
+      |> Floki.find(".a-box-group span.a-price span.a-offscreen")
+      |> Floki.text()
+      |> String.trim_leading()
+      |> String.trim_trailing()
+
+    %Crawly.ParsedItem{
+      :items => [
+        %{price: price, url: response.request_url}
+      ],
+      :requests => []
+    }
   end
 end
